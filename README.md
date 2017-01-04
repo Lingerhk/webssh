@@ -7,18 +7,18 @@
 
 #### 2. 安装
 
-(1) 配置Nginx:
+(1) 配置Nginx:  
     ```
     将/conf/nginx/webssh.conf放到nginx配置文件目录下，重启nginx
 
     ```
 
-(2) 配置supervisor:
+(2) 配置supervisor:  
     ```
     将/conf/supervisor/webssh.ini放到supervisor的配置文件目录下,重启并加载webssh
     ```
 
-(3) 运行成功，可web访问。示例:
+(3) 运行成功，可web访问。示例:  
     http://ssh.s0nnet.com/
 
 
