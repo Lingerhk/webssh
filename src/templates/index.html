@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>webssh</title>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+    <link href="static/tooltip.css" rel="stylesheet" type="text/css"/>
+    <style>
+        .aside{text-align:center; background: #1f8dd6; height: 100px; color: #fff; vertical-align: middle;line-height:100px;font-size: 30px}
+        #main{margin-top: 20px;}
+        .pure-item{ margin: 0 auto 10px; width: 265px; position: relative;}
+        .pure-item:after{ content: ""; display: table; clear: both;}
+        .pure-item label{ float: left; line-height: 34px;}
+        .pure-item input{ float: right;}
+        .terminal {
+            border: #000 solid 5px;
+            font-family: "Monaco", "DejaVu Sans Mono", "Liberation Mono", monospace;
+            font-size: 11px;
+            color: #f0f0f0;
+            background: #000;
+            width: 600px;
+            box-shadow: rgba(0, 0, 0, 0.8) 2px 2px 20px;
+        }
+        .footer {
+            font-size: 15px;
+            font-weight:bold;
+            color: #1f8dd6;
+            display: block;
+            position: absolute;
+            bottom: 15px;
+            right: 20px;
+        }
+    </style>
+</head>
+<header id="head" class="aside">Login SSH</header>
+<body>
+    <div id="term" align="center"></div>
+    <div id="main" align="center">
+    <form id="form" name="form" class="pure-form pure-form-stacked">
+        <fieldset>
+            <div class="pure-item">
+                <label for="host">Host</label>
+                <input id="host" name="host" type="text" placeholder="Host">
+            </div>
+            <div class="pure-item">
+                <label for="port">Port</label>
+                <input id="port" name="port" type="text" value="22" placeholder="Port">
+            </div>
+            <div class="pure-item">
+                <label for="username">Username</label>
+                <input id="username" name="username" type="password" placeholder="Username">
+            </div>
+            <div class="pure-item">
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" placeholder="Password">
+            </div>
+            <div class="pure-item">
+                <label for="xcode">Xcode</label>
+                <input id="xcode" name="xcode" type="password" placeholder="xcode?">
+            </div>
+            <label for="remember" class="pure-checkbox">
+                <input id="remember" type="checkbox"> Remember me
+            </label>
+            <button type="button" class="pure-button pure-button-primary" onclick="connect()">Connect</button>
+        </fieldset>
+    </form>
+    </div>
+<div id="footer" class="footer">
+    &copy; 2017 powered by <a href="http://www.s0nnet.com/" target="_blank" style="text-decoration: none;">s0nnet</a>
+</div>
+
+<script src="static/jquery.min.js"></script>
+<script src="static/ws.js"></script>
+<script src="static/term.js"></script>
+<script src="static/formvalid.js"></script>
+<script type="application/javascript">
+    function openTerminal(options) {
+        $('.terminal').remove();
+        $('#term').show();
+        $('#main').hide();
+        var client = new WSSHClient();
+        var term = new Terminal({cols:80, rows:24, screenKeys:true});
+        term.on('data',function(data){
+            client.sendClientData(data);
+        });
+        term.open();
+        $('.terminal').appendTo('#term');
+        term.write('Connecting...');
+        client.connect({
+            onError: function(error) {
+                term.write('Error: ' + error + '\r\n');
+                console.debug('error happened');
+            },
+            onConnect: function() {
+                client.sendInitData(options);
+                client.sendClientData('\r');
+                console.debug('connection established');
+            },
+            onClose: function() {
+                term.write("\rconnection closed");
+                $('#term').hide();
+                $('#main').show();
+                console.debug('connection reset by peer');
+            },
+            onData: function(data) {
+                term.write(data);
+                console.debug('get data:'+data);
+            }
+        })
+    }
+
+    function store(options){
+        window.localStorage.host=options.host
+        window.localStorage.port=options.port
+        window.localStorage.username=options.username
+        window.localStorage.password=options.password
+    }
+
+    function check(){
+        var result=$("#host").val() && $("#port").val() && $("#username").val() && $("#password").val() && $("#xcode").val()
+        if (result){
+            var spans=$("fieldset").find("span")
+            for (var i=0;i<spans.length;i++){
+                if (spans[i].innerHTML.trim()!="correct"){
+                    return false
+                }
+            }
+        }
+        return result
+    }
+
+    function connect(){
+        var remember=$("#remember").is(":checked")
+        var options={
+            host:$("#host").val(),
+            port:$("#port").val(),
+            username:$("#username").val(),
+            password:$("#password").val(),
+            xcode:$("#xcode").val()
+        }
+        if (remember){
+            store(options)
+        }
+        if (check()){
+            openTerminal(options)
+        }else{
+            alert("please check the form!")
+        }
+    }
+
+    $(function(){
+        $("#form").valid([
+            { name:"host",type:"ip"},
+            { name:"port",type:"port"},
+            { name:"username",type:"username"},
+            { name:"password",type:"password"},
+            { name:"xcode", type:"xcode"},
+        ]);
+    })
+</script>
+</body>
+</html>
